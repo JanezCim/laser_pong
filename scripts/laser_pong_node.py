@@ -17,8 +17,10 @@ class LaserPong:
 
         self.laser_frame_id_ = None # Holds laser frame id
 
-        self.field_width_m = 10
-        self.field_lenght_m = 14
+        self.actual_field_width_m = 0.5 # the width of the projected field
+        self.actual_field_lenght_m = 0.5 # the length of the projected field
+
+        self.output_field_width_m = 10 # the width of the field as pong output wants it 
         self.nr_min_valid_paddle_points = 10
 
 
@@ -32,7 +34,7 @@ class LaserPong:
         for i in range(0, len(scan.ranges)):
             d_m = scan.ranges[i]
             # if there are any ranges larger then range max, ignore them
-            if d_m>scan.range_max:
+            if d_m>scan.range_max or d_m<scan.range_min:
                 continue
             ang_r = i*scan.angle_increment+scan.angle_min
             x = math.cos(ang_r)*d_m
@@ -45,8 +47,6 @@ class LaserPong:
             self.pong_contr_pub.publish(pc_msg)
             return
 
-        self.create_and_pub_point_list_marker(scan_cart, self.can_cart_marker_pub, self.laser_frame_id_)
-
         p1_y_sum = 0
         p1_p_count = 0
         p2_y_sum = 0
@@ -54,8 +54,10 @@ class LaserPong:
 
         scan_cart_lim = []
         for p in scan_cart:
-            if abs(p.y)<self.field_width_m/2 and abs(p.x)<self.field_lenght_m/2:
+            if abs(p.y)<self.actual_field_width_m/2 and abs(p.x)<self.actual_field_lenght_m/2:
                 scan_cart_lim.append(p)
+
+        self.create_and_pub_point_list_marker(scan_cart_lim, self.can_cart_marker_pub, self.laser_frame_id_)
 
         if len(scan_cart_lim) == 0:
             rospy.logwarn_throttle(10, "There are no points inside of the field.")
@@ -80,6 +82,11 @@ class LaserPong:
             pc_msg.player2_active = 1
             p2_y_avg = p2_y_sum/p2_p_count
             pc_msg.player2_pos = p2_y_avg
+
+        # scale to pong acceptable positions (-self.output_field_width_m to self.output_field_width_m)
+        pc_msg.player1_pos = (pc_msg.player1_pos*self.output_field_width_m)/self.actual_field_width_m
+        pc_msg.player2_pos = (pc_msg.player2_pos*self.output_field_width_m)/self.actual_field_width_m
+
 
         self.pong_contr_pub.publish(pc_msg)
 
