@@ -114,6 +114,6 @@ class LaserPong:
         publisher.publish(marker)
 
 if __name__ == '__main__':
-    rospy.init_node('laser_pong', anonymous=True)
+    rospy.init_node('laser_pong')
     LaserPong()
     rospy.spin()
