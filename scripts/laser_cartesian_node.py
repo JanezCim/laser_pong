@@ -10,7 +10,7 @@ import math
 class LaserCartesian:
     def __init__(self):
         self.counter = 0
-        self.can_cart_marker_pub = rospy.Publisher("/scan_cartesian", Marker, queue_size=1)
+        self.can_cart_marker_pub = rospy.Publisher("~scan_cartesian", Marker, queue_size=1)
         self.number_subscriber = rospy.Subscriber("/scan", LaserScan, self.scan_cb)
 
         self.laser_frame_id_ = None # Holds laser frame id
