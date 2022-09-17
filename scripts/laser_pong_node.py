@@ -25,6 +25,7 @@ class LaserPong:
 
 
     def scan_cb(self, msg):
+        ############################## SCAN CALLBACK CODE HERE ##################################################
         scan = LaserScan()
         scan = msg
 
@@ -57,7 +58,7 @@ class LaserPong:
             if abs(p.y)<self.actual_field_width_m/2 and abs(p.x)<self.actual_field_lenght_m/2:
                 scan_cart_lim.append(p)
 
-        self.create_and_pub_point_list_marker(scan_cart_lim, self.can_cart_marker_pub, self.laser_frame_id_)
+        self.create_and_pub_point_list_marker(scan_cart_lim, self.can_cart_marker_pub, self.laser_frame_id_, (0,1,0))
 
         if len(scan_cart_lim) == 0:
             rospy.logwarn_throttle(10, "There are no points inside of the field.")
@@ -90,7 +91,9 @@ class LaserPong:
 
         self.pong_contr_pub.publish(pc_msg)
 
-    def create_and_pub_point_list_marker(self, marker_point_list, publisher, frame):
+        ############################## END OF SCAN CALLBACK CODE HERE ###########################################
+
+    def create_and_pub_point_list_marker(self, marker_point_list, publisher, frame, color_rgb):
         marker = Marker()
         marker.header.frame_id = frame
         marker.header.stamp = rospy.Time.now()
@@ -105,12 +108,12 @@ class LaserPong:
         marker.scale.y = 0.05
         marker.color.a = 0.4
         # Points are green
-        marker.color.r = 0.0
-        marker.color.g = 1.0
-        marker.color.b = 0.0
+        marker.color.r = color_rgb[0]
+        marker.color.g = color_rgb[1]
+        marker.color.b = color_rgb[2]
         publisher.publish(marker)
 
 if __name__ == '__main__':
-    rospy.init_node('laser_pong')
+    rospy.init_node('laser_pong', anonymous=True)
     LaserPong()
     rospy.spin()
