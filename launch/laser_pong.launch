@@ -1,0 +1,19 @@
+<launch>
+  <arg name="simulated_lidar" default="false"/>
+  
+  <node name="pong_marker" pkg="interactive_marker_tutorials" type="pong" output="screen"/>
+  
+  <node name="laser_pong_node" pkg="laser_pong" type="laser_pong_node.py" output="screen"/>
+  
+  <group unless="$(arg simulated_lidar)">
+    <include file="$(find laser_pong)/launch/lidar_X4.launch">
+      <param name="port" value="/dev/ttyUSB0"/>
+      <param name="frame_id" value="laser"/>
+    </include>
+  </group>
+
+  <group if="$(arg simulated_lidar)">
+    <include file="$(find laser_pong)/launch/lidar_gazebo.launch"/>
+  </group>
+
+</launch>
