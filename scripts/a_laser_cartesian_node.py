@@ -16,23 +16,11 @@ class LaserCartesian:
         self.laser_frame_id_ = None # Holds laser frame id
 
     def scan_cb(self, scan:LaserScan):
-        ############################## SCAN CALLBACK CODE HERE ##################################################
         self.laser_frame_id_ = scan.header.frame_id
 
+        ############################## SCAN CALLBACK CODE HERE ##################################################
+        ##### INSERT SCAN MESSAGE CONVERTED TO CARTESIAN INTO scan_cart
         scan_cart = []
-        for i in range(0, len(scan.ranges)):
-            d_m = scan.ranges[i]
-            # if there are any ranges larger then range max, ignore them
-            if d_m>scan.range_max or d_m<scan.range_min:
-                continue
-            ang_r = i*scan.angle_increment+scan.angle_min
-            x = math.cos(ang_r)*d_m
-            y = math.sin(ang_r)*d_m
-            scan_cart.append(Point(x, y, 0))
-
-        if len(scan_cart) == 0:
-            rospy.logwarn("There are no points left after converting to cartesian.")
-            return
 
         self.create_and_pub_point_list_marker(scan_cart, self.can_cart_marker_pub, self.laser_frame_id_, (0,1,0))
 

@@ -25,39 +25,17 @@ class LaserPong:
 
 
     def scan_cb(self, msg):
-        ############################## SCAN CALLBACK CODE HERE ##################################################
         scan = LaserScan()
         scan = msg
-
         self.laser_frame_id_ = scan.header.frame_id
+        ############################## SCAN CALLBACK CODE HERE ##################################################
 
+        ##### INSERT SCAN MESSAGE CONVERTED TO CARTESIAN INTO scan_cart
         scan_cart = []
-        for i in range(0, len(scan.ranges)):
-            d_m = scan.ranges[i]
-            # if there are any ranges larger then range max, ignore them
-            if d_m>scan.range_max or d_m<scan.range_min:
-                continue
-            ang_r = i*scan.angle_increment+scan.angle_min
-            x = math.cos(ang_r)*d_m
-            y = math.sin(ang_r)*d_m
-            scan_cart.append(Point(x, y, 0))
 
-        if len(scan_cart) == 0:
-            rospy.logwarn("There are no points left after converting to cartesian.")
-            pc_msg = pongControl()
-            self.pong_contr_pub.publish(pc_msg)
-            return
-
-        p1_y_sum = 0
-        p1_p_count = 0
-        p2_y_sum = 0
-        p2_p_count = 0
-
+        ##### INSERT LIMITED CARTESIAN SCAN INTO scan_cart_lim
         scan_cart_lim = []
-        for p in scan_cart:
-            if abs(p.y)<self.actual_field_width_m/2 and abs(p.x)<self.actual_field_lenght_m/2:
-                scan_cart_lim.append(p)
-
+        
         self.create_and_pub_point_list_marker(scan_cart_lim, self.can_cart_marker_pub, self.laser_frame_id_, (0,1,0))
 
         if len(scan_cart_lim) == 0:
@@ -74,20 +52,8 @@ class LaserPong:
                 p2_p_count+=1
                 p2_y_sum+=p.y
 
+        ##### CREATE A PONG CONTROL MESSAGE FROM THE SCAN DATA
         pc_msg = pongControl()
-        if p1_p_count > self.nr_min_valid_paddle_points:
-            pc_msg.player1_active = 1
-            p1_y_avg = p1_y_sum/p1_p_count
-            pc_msg.player1_pos = p1_y_avg
-        if p2_p_count > self.nr_min_valid_paddle_points:
-            pc_msg.player2_active = 1
-            p2_y_avg = p2_y_sum/p2_p_count
-            pc_msg.player2_pos = p2_y_avg
-
-        # scale to pong acceptable positions (-self.output_field_width_m to self.output_field_width_m)
-        pc_msg.player1_pos = (pc_msg.player1_pos*self.output_field_width_m)/self.actual_field_width_m
-        pc_msg.player2_pos = (pc_msg.player2_pos*self.output_field_width_m)/self.actual_field_width_m
-
 
         self.pong_contr_pub.publish(pc_msg)
 
